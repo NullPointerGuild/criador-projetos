@@ -1,0 +1,71 @@
+schema_version: 1
+project_id: PRJ-APF-0001
+name: APF
+display_name: AI Project Factory
+intent:
+  source: ../PROJECT.md
+  revision: 1
+  source_sha256: a3ff64c1df88e9f2163a87c5843011eb620e28c1b9933eab670dcb9285918c3c
+  divergence_policy: fail_on_semantic_difference
+purpose:
+  primary: personal
+  secondary:
+    - open_source
+    - experiment
+mode: experiment
+phase: foundation
+problem: >-
+  AI work loses durable state, decision lineage, evidence, cost attribution and
+  enforceable authority boundaries across sessions and providers.
+primary_user: solo_developer
+value_proposition: >-
+  Deterministic governance plus local, queryable and cited project memory around
+  bounded AI execution.
+core_hypothesis: >-
+  A governed intent-to-explanation loop creates more trust and continuity than
+  direct provider use without costing more than the value it adds.
+autonomy:
+  preset: CONTROLLED
+  production: DENY
+  financial_spending: DENY
+  external_communication: DENY
+  destructive_actions: ASK
+platforms:
+  validation: windows_x64
+  planned:
+    - macos
+    - linux
+compute_profile:
+  architecture: maximum_quality
+  implementation_default: balanced
+  routine: economy
+v1:
+  includes:
+    - deterministic_core
+    - cli_first
+    - project_brain_sqlite
+    - codex_executor_adapter
+    - provider_conformance_suite
+    - controlled_permissions
+    - grounded_ask_project
+  excludes:
+    - cloud
+    - distributed_workers
+    - general_autonomy
+    - marketplace
+    - vector_database
+    - dynamic_organization
+    - a2a_runtime
+economics:
+  initial_capital: UNKNOWN
+  monthly_budget: UNKNOWN
+  recurring_commitments: []
+attention:
+  - id: ATTN-001
+    class: ACTION_REQUIRED
+    subject: license
+    status: OPEN
+  - id: ATTN-002
+    class: ACTION_REQUIRED
+    subject: paid_compute_budget
+    status: OPEN

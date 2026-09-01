@@ -1,0 +1,12 @@
+# Repository-local toolchains and disposable validation output
+.tools/
+.tmp/
+/target/
+
+# Local APF runtime state
+*.db
+*.db-shm
+*.db-wal
+
+# Tool diagnostics
+debug.log

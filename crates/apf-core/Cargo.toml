@@ -1,0 +1,20 @@
+[package]
+name = "apf-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+jiff = "=0.2.35"
+rusqlite = { git = "https://github.com/rusqlite/rusqlite.git", rev = "a8f0a07bf65b28c05fa54b260d39707368ad9ed3", default-features = false, features = ["backup", "bundled"] }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+serde_yaml_ng = "=0.10.0"
+sha2 = { version = "0.11.0", default-features = false }

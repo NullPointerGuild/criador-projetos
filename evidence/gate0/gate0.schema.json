@@ -1,0 +1,413 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:apf:evidence:gate0:v1",
+  "title": "APF Gate 0 sanitized documents",
+  "oneOf": [
+    { "$ref": "#/$defs/capabilityMatrix" },
+    { "$ref": "#/$defs/securityDecisions" }
+  ],
+  "$defs": {
+    "safeText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000,
+      "allOf": [
+        { "not": { "pattern": "[\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f-\\u009f]" } },
+        { "not": { "pattern": "[\\u202a-\\u202e\\u2066-\\u2069]" } },
+        { "not": { "pattern": "\\\\" } },
+        { "not": { "pattern": "(^|[^A-Za-z])[A-Za-z]:/" } },
+        { "not": { "pattern": "/([Uu]sers|[Hh]ome)/[A-Za-z0-9._-]" } },
+        { "not": { "pattern": "[Bb]earer [A-Za-z0-9._-]{16,}" } }
+      ]
+    },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "evidenceId": {
+      "type": "string",
+      "pattern": "^(GATE0|PATH|CODEX|CODEX-PERM)-[a-f0-9]{32}$"
+    },
+    "enforcement": {
+      "enum": ["OS_ENFORCED", "PROVIDER_ENFORCED", "APF_VERIFIED", "ADVISORY", "UNKNOWN"]
+    },
+    "measurementStatus": {
+      "enum": ["MEASURED", "PARTIAL", "NOT_EVALUATED", "INVALID_CONTROL", "SUPERSEDED"]
+    },
+    "confidence": { "enum": ["HIGH", "MEDIUM", "LOW", "UNKNOWN"] },
+    "capability": {
+      "enum": [
+        "filesystem", "process", "network", "git", "package_install", "container",
+        "database", "cloud", "secrets", "external_communication", "production",
+        "financial_spending", "destructive_action"
+      ]
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform_id", "os_family", "os_version", "os_build", "architecture", "shell"],
+      "properties": {
+        "platform_id": { "type": "string", "pattern": "^PLAT-[A-Z0-9-]+$" },
+        "os_family": { "const": "windows" },
+        "os_version": { "$ref": "#/$defs/safeText" },
+        "os_build": { "$ref": "#/$defs/safeText" },
+        "architecture": { "const": "x64" },
+        "shell": { "$ref": "#/$defs/safeText" }
+      }
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id", "sha256", "kind", "observed_at", "storage_class",
+        "contains_raw_provider_output", "contains_personal_paths", "copied_into_repository"
+      ],
+      "properties": {
+        "evidence_id": { "$ref": "#/$defs/evidenceId" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "kind": {
+          "enum": ["HOST_MECHANISM", "PATH_ESCAPE", "PROVIDER_AUTOLOAD", "PROVIDER_PERMISSION"]
+        },
+        "observed_at": { "type": "string", "format": "date-time" },
+        "storage_class": { "const": "UNTRACKED_LOCAL_SCRATCH" },
+        "contains_raw_provider_output": { "type": "boolean" },
+        "contains_personal_paths": { "type": "boolean" },
+        "copied_into_repository": { "const": false }
+      }
+    },
+    "hostControl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "control_id", "capability", "name", "measurement_status", "enforcement",
+        "effect_phase", "outcome", "trials", "provider_transfer", "evidence_refs", "limitations"
+      ],
+      "properties": {
+        "control_id": { "type": "string", "pattern": "^HC-[0-9]{2}$" },
+        "capability": { "$ref": "#/$defs/capability" },
+        "name": { "$ref": "#/$defs/safeText" },
+        "measurement_status": { "$ref": "#/$defs/measurementStatus" },
+        "enforcement": { "$ref": "#/$defs/enforcement" },
+        "effect_phase": { "enum": ["PREVENTIVE", "POST_EFFECT", "OBSERVATIONAL", "NONE", "UNKNOWN"] },
+        "outcome": { "$ref": "#/$defs/safeText" },
+        "trials": { "type": "integer", "minimum": 0 },
+        "provider_transfer": { "enum": ["NOT_ESTABLISHED", "MEASURED_SEPARATELY"] },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/evidenceId" }
+        },
+        "limitations": { "type": "array", "items": { "$ref": "#/$defs/safeText" } }
+      }
+    },
+    "binary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "sha256", "state", "platform_ref"],
+      "properties": {
+        "version": { "$ref": "#/$defs/safeText" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "state": { "enum": ["ACTIVE", "HISTORICAL"] },
+        "platform_ref": { "type": "string", "pattern": "^PLAT-[A-Z0-9-]+$" }
+      }
+    },
+    "probeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name", "sandbox_mode", "target_relation", "expected_write", "observed_write",
+        "content_matched", "expectation_met", "raw_attempt_signal", "derived_attempt_signal"
+      ],
+      "properties": {
+        "name": { "$ref": "#/$defs/safeText" },
+        "sandbox_mode": { "enum": ["read-only", "workspace-write", "not_applicable"] },
+        "target_relation": { "enum": ["inside", "sibling-outside", "not_applicable"] },
+        "expected_write": { "type": "boolean" },
+        "observed_write": { "type": "boolean" },
+        "content_matched": { "type": "boolean" },
+        "expectation_met": { "type": "boolean" },
+        "raw_attempt_signal": { "enum": ["TOOL_EVENT", "REJECTION_TEXT", "NONE"] },
+        "derived_attempt_signal": {
+          "enum": ["TOOL_EVENT", "REJECTION_TEXT", "EXACT_CONTENT_MATCH", "NONE"]
+        }
+      }
+    },
+    "providerClaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_id", "provider", "binary", "capability", "surface", "measurement_status",
+        "enforcement", "effect_phase", "positive_control", "confidence", "checked_at",
+        "evidence_refs", "limitations", "blocking"
+      ],
+      "properties": {
+        "claim_id": { "type": "string", "pattern": "^PC-[0-9]{2}$" },
+        "provider": { "enum": ["codex_cli", "claude_code"] },
+        "binary": { "$ref": "#/$defs/binary" },
+        "capability": { "$ref": "#/$defs/capability" },
+        "surface": { "$ref": "#/$defs/safeText" },
+        "configuration_profile_sha256": { "$ref": "#/$defs/sha256" },
+        "measurement_status": { "$ref": "#/$defs/measurementStatus" },
+        "enforcement": { "$ref": "#/$defs/enforcement" },
+        "effect_phase": { "enum": ["PREVENTIVE", "POST_EFFECT", "OBSERVATIONAL", "NONE", "UNKNOWN"] },
+        "positive_control": { "enum": ["PASSED", "FAILED", "ABSENT", "NOT_APPLICABLE"] },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "checked_at": { "type": "string", "format": "date-time" },
+        "raw_classification": { "$ref": "#/$defs/safeText" },
+        "derived_classification": { "$ref": "#/$defs/safeText" },
+        "cases": { "type": "array", "items": { "$ref": "#/$defs/probeCase" } },
+        "evidence_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/evidenceId" }
+        },
+        "limitations": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/safeText" } },
+        "blocking": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "measurement_status": { "enum": ["NOT_EVALUATED", "SUPERSEDED"] } },
+            "required": ["measurement_status"]
+          },
+          "then": {
+            "properties": {
+              "enforcement": { "const": "UNKNOWN" },
+              "positive_control": { "enum": ["ABSENT", "FAILED"] }
+            }
+          }
+        }
+      ]
+    },
+    "classifierDefect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defect_id", "evidence_ref", "raw_classification", "cause", "corrected_rule",
+        "derived_classification", "raw_evidence_mutated", "model_reinvoked", "status"
+      ],
+      "properties": {
+        "defect_id": { "type": "string", "pattern": "^DEF-[0-9]{2}$" },
+        "evidence_ref": { "$ref": "#/$defs/evidenceId" },
+        "raw_classification": { "$ref": "#/$defs/safeText" },
+        "cause": { "$ref": "#/$defs/safeText" },
+        "corrected_rule": { "$ref": "#/$defs/safeText" },
+        "derived_classification": { "$ref": "#/$defs/safeText" },
+        "raw_evidence_mutated": { "const": false },
+        "model_reinvoked": { "const": false },
+        "status": { "const": "SCRIPT_FIXED_NOT_REPRODUCED" }
+      }
+    },
+    "unknown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unknown_id", "statement", "blocks", "resolution"],
+      "properties": {
+        "unknown_id": { "type": "string", "pattern": "^UNK-[0-9]{2}$" },
+        "statement": { "$ref": "#/$defs/safeText" },
+        "blocks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/safeText" } },
+        "resolution": { "$ref": "#/$defs/safeText" }
+      }
+    },
+    "sanitization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["personal_paths_removed", "prompts_included", "auth_state_included", "raw_output_included"],
+      "properties": {
+        "personal_paths_removed": { "const": true },
+        "prompts_included": { "const": false },
+        "auth_state_included": { "const": false },
+        "raw_output_included": { "const": false }
+      }
+    },
+    "capabilityMatrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version", "document_type", "document_version", "generated_at", "platform",
+        "scope", "evidence_refs", "host_controls", "provider_claims", "classifier_defects",
+        "unknowns", "non_claims", "sanitization"
+      ],
+      "properties": {
+        "$schema": { "const": "./gate0.schema.json" },
+        "schema_version": { "const": 1 },
+        "document_type": { "const": "CAPABILITY_MATRIX" },
+        "document_version": { "const": 1 },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "platform": { "$ref": "#/$defs/platform" },
+        "scope": { "$ref": "#/$defs/safeText" },
+        "evidence_refs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidenceRef" } },
+        "host_controls": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/hostControl" } },
+        "provider_claims": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/providerClaim" } },
+        "classifier_defects": { "type": "array", "items": { "$ref": "#/$defs/classifierDefect" } },
+        "unknowns": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/unknown" } },
+        "non_claims": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/safeText" } },
+        "sanitization": { "$ref": "#/$defs/sanitization" }
+      }
+    },
+    "grantDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capability", "decision", "observed_enforcement", "basis"],
+      "properties": {
+        "capability": { "$ref": "#/$defs/capability" },
+        "decision": { "enum": ["DENY", "ASK", "ALLOW"] },
+        "observed_enforcement": { "$ref": "#/$defs/enforcement" },
+        "basis": { "$ref": "#/$defs/safeText" },
+        "expires_at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "capability": {
+                "enum": ["production", "financial_spending", "external_communication", "secrets", "cloud"]
+              }
+            },
+            "required": ["capability"]
+          },
+          "then": { "properties": { "decision": { "const": "DENY" } } }
+        },
+        {
+          "if": {
+            "properties": { "observed_enforcement": { "const": "UNKNOWN" } },
+            "required": ["observed_enforcement"]
+          },
+          "then": { "properties": { "decision": { "const": "DENY" } } }
+        },
+        {
+          "if": { "properties": { "decision": { "const": "ALLOW" } }, "required": ["decision"] },
+          "then": {
+            "required": ["expires_at"],
+            "properties": {
+              "expires_at": true,
+              "observed_enforcement": {
+                "enum": ["OS_ENFORCED", "PROVIDER_ENFORCED", "APF_VERIFIED"]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_id", "status", "note"],
+      "properties": {
+        "task_id": { "type": "string", "pattern": "^T[0-9]+\\.[0-9]+[a-z]?$" },
+        "status": { "enum": ["MET", "PARTIAL", "NOT_MET", "WAIVED_FOR_SCOPE"] },
+        "note": { "$ref": "#/$defs/safeText" }
+      }
+    },
+    "gateDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision_id", "title", "decision_state", "gate_conclusion", "scope_allowed",
+        "scope_excluded", "effective_grants", "conditions", "dependencies", "evidence_basis",
+        "unknowns", "confidence", "ratification"
+      ],
+      "properties": {
+        "decision_id": { "type": "string", "pattern": "^T0\\.8[a-c]?$" },
+        "title": { "$ref": "#/$defs/safeText" },
+        "decision_state": { "enum": ["ISSUED", "DEFERRED_INCOMPLETE", "INVALIDATED"] },
+        "gate_conclusion": {
+          "type": ["string", "null"],
+          "enum": ["APPROVED_CONTROLLED", "APPROVED_WITH_ADVISORY_LIMITS", "REQUIRES_CONTAINER", "REJECTED", null]
+        },
+        "scope_allowed": { "type": "array", "items": { "$ref": "#/$defs/safeText" } },
+        "scope_excluded": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/safeText" } },
+        "effective_grants": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/grantDecision" } },
+        "conditions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/safeText" } },
+        "dependencies": { "type": "array", "items": { "$ref": "#/$defs/dependency" } },
+        "evidence_basis": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^(HC|PC|DEF|UNK)-[0-9]{2}$" }
+        },
+        "unknowns": { "type": "array", "items": { "$ref": "#/$defs/safeText" } },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "ratification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required", "ratified_by_human"],
+          "properties": {
+            "required": { "type": "boolean" },
+            "ratified_by_human": { "type": "boolean" }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "decision_state": { "const": "DEFERRED_INCOMPLETE" } },
+            "required": ["decision_state"]
+          },
+          "then": {
+            "properties": {
+              "gate_conclusion": { "const": null },
+              "effective_grants": {
+                "type": "array",
+                "not": {
+                  "contains": {
+                    "type": "object",
+                    "properties": { "decision": { "const": "ALLOW" } },
+                    "required": ["decision"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "invalidationTrigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trigger_id", "statement", "effect"],
+      "properties": {
+        "trigger_id": { "type": "string", "pattern": "^INV-[0-9]{2}$" },
+        "statement": { "$ref": "#/$defs/safeText" },
+        "effect": { "enum": ["INVALIDATES_DOCUMENT", "INVALIDATES_CLAIM", "REQUIRES_REPROBE"] }
+      }
+    },
+    "securityDecisions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version", "document_type", "document_version", "generated_at", "platform_ref",
+        "matrix", "decisions", "invalidation_triggers", "unknown_policy", "non_claims",
+        "ratified_by_human", "sanitization"
+      ],
+      "properties": {
+        "$schema": { "const": "./gate0.schema.json" },
+        "schema_version": { "const": 1 },
+        "document_type": { "const": "SECURITY_DECISIONS" },
+        "document_version": { "const": 1 },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "platform_ref": { "type": "string", "pattern": "^PLAT-[A-Z0-9-]+$" },
+        "matrix": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "sha256"],
+          "properties": {
+            "file": { "const": "capability-matrix.v1.json" },
+            "sha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/gateDecision" }
+        },
+        "invalidation_triggers": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/invalidationTrigger" }
+        },
+        "unknown_policy": { "$ref": "#/$defs/safeText" },
+        "non_claims": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/safeText" } },
+        "ratified_by_human": { "const": false },
+        "sanitization": { "$ref": "#/$defs/sanitization" }
+      }
+    }
+  }
+}

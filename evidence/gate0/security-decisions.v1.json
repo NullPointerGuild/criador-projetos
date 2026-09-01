@@ -1,0 +1,341 @@
+{
+  "$schema": "./gate0.schema.json",
+  "schema_version": 1,
+  "document_type": "SECURITY_DECISIONS",
+  "document_version": 1,
+  "generated_at": "2026-08-31T15:10:00Z",
+  "platform_ref": "PLAT-WINDOWS-X64-26200-9168",
+  "matrix": {
+    "file": "capability-matrix.v1.json",
+    "sha256": "2a21c641f7e9096460431e67a6fe4487b0117578becfc12834df88bf928e6504"
+  },
+  "decisions": [
+    {
+      "decision_id": "T0.8",
+      "title": "Close Gate 0 for a governed provider executor",
+      "decision_state": "DEFERRED_INCOMPLETE",
+      "gate_conclusion": null,
+      "scope_allowed": [],
+      "scope_excluded": [
+        "Provider writes",
+        "Provider network tools",
+        "External effects",
+        "Hostile or unreviewed repositories"
+      ],
+      "effective_grants": [
+        {
+          "capability": "filesystem",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Adversarial path prevention and the active binary autoload surface remain incomplete."
+        },
+        {
+          "capability": "network",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Public egress and DNS behavior are not measured."
+        },
+        {
+          "capability": "production",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        },
+        {
+          "capability": "financial_spending",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        },
+        {
+          "capability": "external_communication",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        },
+        {
+          "capability": "secrets",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        },
+        {
+          "capability": "cloud",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        }
+      ],
+      "conditions": [
+        "T0.9, T0.10 and T0.11 must be resolved for the exact provider digest and configuration.",
+        "Unknown never becomes allow and no model may waive a dependency."
+      ],
+      "dependencies": [
+        { "task_id": "T0.3", "status": "PARTIAL", "note": "Claude schema behavior was observed, but the final provider-facing schema was not rerun." },
+        { "task_id": "T0.4", "status": "PARTIAL", "note": "Host fixture process termination passed; provider transfer and graceful interruption remain unmeasured." },
+        { "task_id": "T0.5", "status": "PARTIAL", "note": "Host fixture environment and output passed; same-user credential stores remain outside the claim." },
+        { "task_id": "T0.6", "status": "PARTIAL", "note": "Detection exists, but the race escaped and symbolic link behavior is unknown." },
+        { "task_id": "T0.7", "status": "PARTIAL", "note": "Only loopback was measured." },
+        { "task_id": "T0.9", "status": "PARTIAL", "note": "Autoload evidence belongs to the historical Codex digest." },
+        { "task_id": "T0.10", "status": "NOT_MET", "note": "Crash recovery and unknown effects are not measured." },
+        { "task_id": "T0.11", "status": "NOT_MET", "note": "Permission probe usage is absent and real monetary cost is unknown." }
+      ],
+      "evidence_basis": ["HC-01", "HC-02", "HC-03", "HC-04", "HC-05", "HC-06", "HC-07", "HC-08", "HC-09", "PC-03", "PC-04", "PC-05", "UNK-01", "UNK-04"],
+      "unknowns": [
+        "Provider-real public egress",
+        "Crash recovery and unknown effects",
+        "Active binary instruction autoload",
+        "Adversarial path prevention"
+      ],
+      "confidence": "HIGH",
+      "ratification": { "required": false, "ratified_by_human": false }
+    },
+    {
+      "decision_id": "T0.8a",
+      "title": "Permit the deterministic first slice without provider writes",
+      "decision_state": "ISSUED",
+      "gate_conclusion": "APPROVED_WITH_ADVISORY_LIMITS",
+      "scope_allowed": [
+        "Repository-local toolchain bootstrap",
+        "Deterministic implementation and tests for init, doctor and status",
+        "Read-only provider judgment over the reviewed first-party repository with no mutable tools"
+      ],
+      "scope_excluded": [
+        "Any APF runtime execution of a provider",
+        "Any provider write",
+        "Any provider tool with external effects",
+        "Any unreviewed or hostile repository"
+      ],
+      "effective_grants": [
+        {
+          "capability": "filesystem",
+          "decision": "DENY",
+          "observed_enforcement": "PROVIDER_ENFORCED",
+          "basis": "Provider mutation is denied; read-only review is a development aid outside the APF runtime."
+        },
+        {
+          "capability": "process",
+          "decision": "DENY",
+          "observed_enforcement": "PROVIDER_ENFORCED",
+          "basis": "Read-only reviewers receive no command or code execution tools."
+        },
+        {
+          "capability": "network",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Provider tool network access is not measured; inference destination is disclosed separately."
+        },
+        {
+          "capability": "production",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        },
+        {
+          "capability": "financial_spending",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        },
+        {
+          "capability": "external_communication",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        },
+        {
+          "capability": "secrets",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        },
+        {
+          "capability": "cloud",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        }
+      ],
+      "conditions": [
+        "The first slice contains no provider adapter, execution broker or mutable provider tool.",
+        "Brain, backups and secrets stay outside agent-writable workspaces.",
+        "A provider digest change invalidates its read-only claim.",
+        "T0.8b must be issued before Slice 2 begins."
+      ],
+      "dependencies": [
+        { "task_id": "T0.4", "status": "PARTIAL", "note": "Sufficient for local deterministic process supervision design, not provider execution." },
+        { "task_id": "T0.5", "status": "PARTIAL", "note": "Sufficient for implementing bounded local diagnostics, not secrets containment." },
+        { "task_id": "T0.9", "status": "WAIVED_FOR_SCOPE", "note": "No APF runtime provider execution exists in Slice 1; read-only development review uses explicit safe mode and no mutable tools." },
+        { "task_id": "T0.11", "status": "WAIVED_FOR_SCOPE", "note": "Slice 1 does not meter provider execution; review cost remains estimated list basis and actual spend unknown." }
+      ],
+      "evidence_basis": ["HC-01", "HC-02", "HC-03", "HC-04", "PC-03", "PC-06", "UNK-05", "UNK-06"],
+      "unknowns": [
+        "Read-only provider behavior is provider-enforced rather than independent host containment.",
+        "The active Codex autoload case is not measured."
+      ],
+      "confidence": "HIGH",
+      "ratification": { "required": false, "ratified_by_human": false }
+    },
+    {
+      "decision_id": "T0.8b",
+      "title": "Permit provider writes in the owner repository",
+      "decision_state": "DEFERRED_INCOMPLETE",
+      "gate_conclusion": null,
+      "scope_allowed": [],
+      "scope_excluded": [
+        "All provider writes",
+        "All provider-native path mutation tools",
+        "All external effects"
+      ],
+      "effective_grants": [
+        {
+          "capability": "filesystem",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "An ordinary file boundary passed once, but adversarial path prevention remains unknown and the race escaped in the host fixture."
+        },
+        {
+          "capability": "network",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Public egress and DNS are not measured."
+        },
+        {
+          "capability": "destructive_action",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "No destructive provider action is eligible while the decision is incomplete."
+        }
+      ],
+      "conditions": [
+        "A repeated positive control alone is insufficient; provider-native adversarial path behavior must be measured.",
+        "Crash recovery must prove interrupted state and no silent retry.",
+        "Usage and cost normalization must persist source, confidence and cost basis."
+      ],
+      "dependencies": [
+        { "task_id": "T0.6", "status": "PARTIAL", "note": "Detection only; the race escaped and symbolic link behavior is unknown." },
+        { "task_id": "T0.7", "status": "PARTIAL", "note": "Only loopback was measured." },
+        { "task_id": "T0.9", "status": "PARTIAL", "note": "The active Codex digest has no autoload conformance evidence." },
+        { "task_id": "T0.10", "status": "NOT_MET", "note": "No crash recovery probe exists." },
+        { "task_id": "T0.11", "status": "NOT_MET", "note": "Usage was absent from the permission probe and actual monetary cost is unknown." }
+      ],
+      "evidence_basis": ["PC-03", "PC-04", "PC-05", "HC-06", "HC-07", "HC-08", "HC-09", "DEF-01", "UNK-01", "UNK-03", "UNK-04"],
+      "unknowns": [
+        "Adversarial path prevention",
+        "Crash recovery",
+        "Provider-real egress",
+        "Active binary autoload"
+      ],
+      "confidence": "HIGH",
+      "ratification": { "required": false, "ratified_by_human": false }
+    },
+    {
+      "decision_id": "T0.8c",
+      "title": "Handle hostile repositories and unknown content",
+      "decision_state": "ISSUED",
+      "gate_conclusion": "REQUIRES_CONTAINER",
+      "scope_allowed": [],
+      "scope_excluded": [
+        "Any host execution against a hostile or unreviewed repository",
+        "Any package or hook execution from hostile content",
+        "Any human override that claims containment"
+      ],
+      "effective_grants": [
+        {
+          "capability": "filesystem",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Independent hostile-content containment is absent."
+        },
+        {
+          "capability": "process",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "No isolated execution surface is measured."
+        },
+        {
+          "capability": "network",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "No egress boundary is measured."
+        },
+        {
+          "capability": "container",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Container or virtual machine containment is required but not evaluated."
+        },
+        {
+          "capability": "package_install",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Install scripts from hostile content are never executed on the host."
+        },
+        {
+          "capability": "production",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        },
+        {
+          "capability": "financial_spending",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        },
+        {
+          "capability": "external_communication",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        },
+        {
+          "capability": "secrets",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        },
+        {
+          "capability": "cloud",
+          "decision": "DENY",
+          "observed_enforcement": "UNKNOWN",
+          "basis": "Hard veto in version one."
+        }
+      ],
+      "conditions": [
+        "The required container or virtual machine must itself be measured before it creates an execution path.",
+        "Until then, hostile content is refused rather than run under advisory controls."
+      ],
+      "dependencies": [
+        { "task_id": "T0.6", "status": "PARTIAL", "note": "Host path prevention is not sufficient for hostile content." },
+        { "task_id": "T0.7", "status": "PARTIAL", "note": "No provider or container egress boundary is measured." }
+      ],
+      "evidence_basis": ["HC-05", "HC-06", "HC-07", "HC-08", "HC-09", "UNK-07"],
+      "unknowns": ["Container or virtual machine efficacy and availability"],
+      "confidence": "HIGH",
+      "ratification": { "required": false, "ratified_by_human": false }
+    }
+  ],
+  "invalidation_triggers": [
+    { "trigger_id": "INV-01", "statement": "Any provider executable digest change.", "effect": "INVALIDATES_CLAIM" },
+    { "trigger_id": "INV-02", "statement": "Any sandbox, approval, autoload or Windows backend configuration change.", "effect": "REQUIRES_REPROBE" },
+    { "trigger_id": "INV-03", "statement": "Any operating system build, account privilege or execution account change.", "effect": "REQUIRES_REPROBE" },
+    { "trigger_id": "INV-04", "statement": "Any classifier logic change after the correction recorded as DEF-01.", "effect": "REQUIRES_REPROBE" },
+    { "trigger_id": "INV-05", "statement": "Any referenced raw evidence digest mismatch.", "effect": "INVALIDATES_DOCUMENT" }
+  ],
+  "unknown_policy": "UNKNOWN, NOT_EVALUATED and incomplete dependencies always resolve to DENY; neither a model nor a human override changes the recorded enforcement level.",
+  "non_claims": [
+    "Gate 0 is not closed as a whole.",
+    "Approval of Slice 1 is not approval of a provider execution slice.",
+    "No decision claims independent host containment of a provider process.",
+    "A container requirement does not mean a container baseline exists.",
+    "The raw classifier defect was not erased and no model call was repeated."
+  ],
+  "ratified_by_human": false,
+  "sanitization": {
+    "personal_paths_removed": true,
+    "prompts_included": false,
+    "auth_state_included": false,
+    "raw_output_included": false
+  }
+}

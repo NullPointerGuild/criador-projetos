@@ -1,0 +1,418 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:apf:spec:apf-cp:v1:message",
+  "title": "APF-CP V1 Message",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "message_id",
+    "message_type",
+    "project_id",
+    "task_id",
+    "actor",
+    "created_at",
+    "policy_snapshot_id",
+    "context",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "message_id": { "type": "string", "pattern": "^(WO|RES|BLK|APRQ|APRS|CAN)-[A-Z0-9-]+$" },
+    "message_type": {
+      "enum": [
+        "WORK_ORDER",
+        "RESULT",
+        "BLOCKER",
+        "APPROVAL_REQUEST",
+        "APPROVAL_RESULT",
+        "CANCEL_REQUEST"
+      ]
+    },
+    "project_id": { "type": "string", "pattern": "^PRJ-[A-Z0-9-]+$" },
+    "task_id": { "type": "string", "pattern": "^TASK-[A-Z0-9-]+$" },
+    "run_id": { "type": "string", "pattern": "^RUN-[A-Z0-9-]+$" },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "causation_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "idempotency_key": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "actor": { "$ref": "#/$defs/actor" },
+    "policy_snapshot_id": { "type": "string", "pattern": "^POL-[A-Z0-9-]+$" },
+    "budget": { "$ref": "#/$defs/budget" },
+    "context": { "$ref": "#/$defs/context" },
+    "payload": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "message_type": { "const": "WORK_ORDER" } } },
+      "then": {
+        "required": ["budget"],
+        "properties": {
+          "message_id": { "type": "string", "pattern": "^WO-[A-Z0-9-]+$" },
+          "budget": { "$ref": "#/properties/budget" },
+          "actor": {
+            "allOf": [
+              { "$ref": "#/$defs/actor" },
+              { "type": "object", "properties": { "authority": { "const": "CORE" } } }
+            ]
+          },
+          "payload": { "$ref": "#/$defs/workOrder" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "message_type": { "const": "RESULT" } } },
+      "then": {
+        "required": ["run_id"],
+        "properties": {
+          "message_id": { "type": "string", "pattern": "^RES-[A-Z0-9-]+$" },
+          "run_id": { "$ref": "#/properties/run_id" },
+          "payload": { "$ref": "#/$defs/result" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "message_type": { "const": "BLOCKER" } } },
+      "then": {
+        "required": ["run_id"],
+        "properties": {
+          "message_id": { "type": "string", "pattern": "^BLK-[A-Z0-9-]+$" },
+          "run_id": { "$ref": "#/properties/run_id" },
+          "payload": { "$ref": "#/$defs/blocker" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "message_type": { "const": "APPROVAL_REQUEST" } } },
+      "then": {
+        "properties": {
+          "message_id": { "type": "string", "pattern": "^APRQ-[A-Z0-9-]+$" },
+          "payload": { "$ref": "#/$defs/approvalRequest" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "message_type": { "const": "APPROVAL_RESULT" } } },
+      "then": {
+        "properties": {
+          "message_id": { "type": "string", "pattern": "^APRS-[A-Z0-9-]+$" },
+          "payload": { "$ref": "#/$defs/approvalResult" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "message_type": { "const": "CANCEL_REQUEST" } } },
+      "then": {
+        "required": ["run_id"],
+        "properties": {
+          "message_id": { "type": "string", "pattern": "^CAN-[A-Z0-9-]+$" },
+          "run_id": { "$ref": "#/properties/run_id" },
+          "payload": { "$ref": "#/$defs/cancelRequest" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "agent_instance", "authority"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "agent_instance": { "type": "string", "minLength": 1 },
+        "authority": { "enum": ["HUMAN", "CORE", "PROVIDER"] },
+        "provider": { "type": "string" },
+        "model": { "type": "string" },
+        "effort": { "type": "string" }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enforcement"],
+      "properties": {
+        "tokens": { "type": "integer", "minimum": 0 },
+        "cost": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "duration_seconds": { "type": "integer", "minimum": 1 },
+        "tool_calls": { "type": "integer", "minimum": 0 },
+        "subagents": { "type": "integer", "minimum": 0 },
+        "enforcement": { "enum": ["HARD", "SOFT", "UNAVAILABLE"] }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pack_hash", "refs"],
+      "properties": {
+        "pack_hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "refs": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[A-Z]+-[A-Z0-9-]+$" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capability", "decision", "enforcement", "scope"],
+      "properties": {
+        "capability": {
+          "enum": [
+            "filesystem",
+            "process",
+            "network",
+            "git",
+            "package_install",
+            "container",
+            "database",
+            "cloud",
+            "secrets",
+            "external_communication",
+            "production",
+            "financial_spending",
+            "destructive_action"
+          ]
+        },
+        "decision": { "enum": ["DENY", "ASK", "ALLOW"] },
+        "enforcement": { "enum": ["OS_ENFORCED", "PROVIDER_ENFORCED", "APF_VERIFIED", "ADVISORY"] },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "paths": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "domains": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "environment": { "enum": ["LOCAL", "DEVELOPMENT", "STAGING", "PRODUCTION"] },
+            "maximum_amount": { "type": "number", "minimum": 0 },
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+            "expires_at": { "type": "string", "format": "date-time" },
+            "tools": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["capability"],
+            "properties": {
+              "capability": {
+                "enum": ["production", "financial_spending", "external_communication", "secrets", "cloud"]
+              }
+            }
+          },
+          "then": { "properties": { "decision": { "const": "DENY" } } }
+        },
+        {
+          "if": {
+            "required": ["capability"],
+            "properties": { "capability": { "const": "destructive_action" } }
+          },
+          "then": { "properties": { "decision": { "enum": ["DENY", "ASK"] } } }
+        },
+        {
+          "if": {
+            "required": ["decision"],
+            "properties": { "decision": { "const": "ALLOW" } }
+          },
+          "then": {
+            "properties": {
+              "enforcement": { "not": { "const": "ADVISORY" } },
+              "scope": {
+                "type": "object",
+                "required": ["expires_at"],
+                "properties": { "expires_at": true }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["capability", "decision"],
+            "properties": {
+              "capability": { "const": "filesystem" },
+              "decision": { "enum": ["ASK", "ALLOW"] }
+            }
+          },
+          "then": {
+            "properties": {
+              "scope": { "type": "object", "required": ["paths"], "properties": { "paths": true } }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["capability", "decision"],
+            "properties": {
+              "capability": { "const": "network" },
+              "decision": { "enum": ["ASK", "ALLOW"] }
+            }
+          },
+          "then": {
+            "properties": {
+              "scope": { "type": "object", "required": ["domains"], "properties": { "domains": true } }
+            }
+          }
+        }
+      ]
+    },
+    "repoPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?![A-Za-z]:)(?!/)(?!\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[A-Za-z0-9._*?/-]+$"
+    },
+    "safeText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 65536,
+      "pattern": "^[^\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f-\\u009f\\u202a-\\u202e\\u2066-\\u2069]*$"
+    },
+    "workOrder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objective", "acceptance", "allowed_paths", "protected_paths", "grants", "provider_profile", "max_attempts"],
+      "properties": {
+        "objective": { "$ref": "#/$defs/safeText" },
+        "acceptance": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "allowed_paths": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/repoPath" },
+          "uniqueItems": true,
+          "not": { "contains": { "const": "**" } }
+        },
+        "protected_paths": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/repoPath" },
+          "uniqueItems": true,
+          "allOf": [
+            { "type": "array", "contains": { "const": ".git/**" } },
+            { "type": "array", "contains": { "const": ".apf/**" } },
+            { "type": "array", "contains": { "const": ".tools/**" } }
+          ]
+        },
+        "grants": { "type": "array", "items": { "$ref": "#/$defs/grant" } },
+        "provider_profile": { "type": "string", "minLength": 1 },
+        "expected_response_schema": { "type": "string" },
+        "max_attempts": { "type": "integer", "minimum": 1, "maximum": 3 }
+      }
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "kind"],
+      "properties": {
+        "path": { "$ref": "#/$defs/repoPath" },
+        "kind": { "enum": ["ADDED", "MODIFIED", "DELETED", "RENAMED"] },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["PASSED", "FAILED", "SKIPPED"] },
+        "evidence_ref": { "type": "string" },
+        "summary": { "type": "string" }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "cost_basis", "source", "confidence"],
+      "properties": {
+        "input_tokens": { "type": "integer", "minimum": 0 },
+        "output_tokens": { "type": "integer", "minimum": 0 },
+        "cost": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "state": { "enum": ["ESTIMATED", "COMMITTED", "ACTUAL"] },
+        "cost_basis": { "enum": ["METERED", "LIST", "CONTRACTED", "SUBSCRIPTION_INCLUDED", "NONE", "UNKNOWN"] },
+        "source": { "type": "string", "minLength": 1 },
+        "confidence": { "enum": ["HIGH", "MEDIUM", "LOW", "UNKNOWN"] }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["cost"], "properties": { "cost": true } },
+          "then": { "required": ["currency"], "properties": { "currency": true } }
+        },
+        {
+          "if": {
+            "required": ["state"],
+            "properties": { "state": { "const": "ACTUAL" } }
+          },
+          "then": { "properties": { "cost_basis": { "enum": ["METERED", "NONE"] } } }
+        },
+        {
+          "if": {
+            "required": ["cost_basis"],
+            "properties": { "cost_basis": { "const": "UNKNOWN" } }
+          },
+          "then": { "not": { "required": ["cost"], "properties": { "cost": true } } }
+        }
+      ]
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "summary", "changes", "checks", "artifacts", "risks", "assumptions", "blockers", "usage", "next_action"],
+      "properties": {
+        "outcome": { "enum": ["SUCCEEDED", "FAILED", "BLOCKED", "INPUT_REQUIRED", "CANCELLED", "INTERRUPTED", "CHANGES_REQUESTED"] },
+        "summary": { "$ref": "#/$defs/safeText" },
+        "changes": { "type": "array", "items": { "$ref": "#/$defs/change" } },
+        "checks": { "type": "array", "items": { "$ref": "#/$defs/check" } },
+        "artifacts": { "type": "array", "items": { "type": "string" } },
+        "risks": { "type": "array", "items": { "type": "string" } },
+        "assumptions": { "type": "array", "items": { "type": "string" } },
+        "blockers": { "type": "array", "items": { "type": "string" } },
+        "usage": { "$ref": "#/$defs/usage" },
+        "next_action": { "$ref": "#/$defs/safeText" }
+      }
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "summary", "requested_action"],
+      "properties": {
+        "kind": { "enum": ["INPUT", "SCOPE", "CAPABILITY", "BUDGET", "SECURITY", "DEPENDENCY", "ARCHITECTURE"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "requested_action": { "type": "string", "minLength": 1 }
+      }
+    },
+    "approvalRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject", "impact", "reversibility", "requested_grants", "expires_at"],
+      "properties": {
+        "subject": { "type": "string", "minLength": 1 },
+        "impact": { "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
+        "reversibility": { "enum": ["EASY", "MODERATE", "EXPENSIVE", "NEARLY_IRREVERSIBLE"] },
+        "requested_grants": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/grant" } },
+        "expires_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "approvalResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request_id", "decision", "decided_by", "decided_at"],
+      "properties": {
+        "request_id": { "type": "string", "pattern": "^APRQ-[A-Z0-9-]+$" },
+        "decision": { "enum": ["APPROVED", "DENIED", "EXPIRED", "REVOKED"] },
+        "decided_by": { "type": "string", "minLength": 1 },
+        "decided_at": { "type": "string", "format": "date-time" },
+        "reason": { "type": "string" }
+      }
+    },
+    "cancelRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason", "descendants"],
+      "properties": {
+        "reason": { "type": "string", "minLength": 1 },
+        "descendants": { "enum": ["CANCEL", "DETACH"] }
+      }
+    }
+  }
+}

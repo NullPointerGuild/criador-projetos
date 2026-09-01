@@ -1,0 +1,53 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "outcome",
+    "summary",
+    "changes",
+    "checks",
+    "artifacts",
+    "risks",
+    "assumptions",
+    "blockers",
+    "next_action"
+  ],
+  "properties": {
+    "outcome": {
+      "enum": ["SUCCEEDED", "FAILED", "BLOCKED", "INPUT_REQUIRED", "CANCELLED", "INTERRUPTED", "CHANGES_REQUESTED"]
+    },
+    "summary": { "type": "string" },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "kind", "sha256"],
+        "properties": {
+          "path": { "type": "string" },
+          "kind": { "enum": ["ADDED", "MODIFIED", "DELETED", "RENAMED"] },
+          "sha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" }
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "status", "evidence_ref", "summary"],
+        "properties": {
+          "name": { "type": "string" },
+          "status": { "enum": ["PASSED", "FAILED", "SKIPPED"] },
+          "evidence_ref": { "type": ["string", "null"] },
+          "summary": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "artifacts": { "type": "array", "items": { "type": "string" } },
+    "risks": { "type": "array", "items": { "type": "string" } },
+    "assumptions": { "type": "array", "items": { "type": "string" } },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "next_action": { "type": "string" }
+  }
+}

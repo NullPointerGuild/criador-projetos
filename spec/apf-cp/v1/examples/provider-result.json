@@ -1,0 +1,18 @@
+{
+  "outcome": "SUCCEEDED",
+  "summary": "The requested validation completed and produced no repository changes.",
+  "changes": [],
+  "checks": [
+    {
+      "name": "foundation-validation",
+      "status": "PASSED",
+      "evidence_ref": "EVD-LOCAL-0001",
+      "summary": "The deterministic foundation validation completed successfully."
+    }
+  ],
+  "artifacts": [],
+  "risks": [],
+  "assumptions": [],
+  "blockers": [],
+  "next_action": "Return the payload to the Core for independent verification and canonical wrapping."
+}

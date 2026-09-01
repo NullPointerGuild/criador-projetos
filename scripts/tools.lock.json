@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "platform": "windows-x64",
+  "sqlite": {
+    "version": "3.53.4",
+    "archive_sha3_256": "88b4659fe747896b853af10157316b4ade143553efb89c1c8ca7423a278dcc8b",
+    "archive_sha256": "f46ee2475de4cbe287e6e5f7d43c838796b14e7379cd216bdbb28d391429f9fc",
+    "executable_sha256": "5da2398d4913b893bd1ea578d85403b3a83a06fabf9d2303ca9f63ef0849fc6f"
+  },
+  "node": {
+    "version": "24.20.0",
+    "archive_sha256": "6cac9ffbca8f6a47091e4b5c772e0606049c3871cb67d900c0cedde630e545ba",
+    "executable_sha256": "5c976096e04e5c2c1f091938926234cc9fbebfe9787ddd149351b3b0ecc707b5",
+    "distribution_tree_sha256": "9b1078b7d96865fe79fac5daebfe3c5b7d88c1e7a0ca5746a35f5b4df3655798"
+  },
+  "rust": {
+    "version": "1.98.0",
+    "toolchain": "1.98.0-x86_64-pc-windows-gnu",
+    "target": "x86_64-pc-windows-gnu",
+    "rustup_version": "1.29.0",
+    "rustup_init_url": "https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe",
+    "rustup_init_file": "rustup-init-1.29.0-x86_64-pc-windows-msvc.exe",
+    "rustup_init_sha256": "86478e53f769379d7f0ebfa7c9aa97cb76ca92233f79aa2cc0dbee2efaac73c7",
+    "toolchain_tree_sha256": "d31122d88eb61fa7dffae888d9e64de6cdd4bbf22569702f8950e91229356a33",
+    "rustc_commit": "88d9e12ae178fab0fb5cc050a94da85685d449ea",
+    "cargo_version": "1.98.0",
+    "cargo_commit": "797e8a9bca276c1c9f9f738d2a20f484fa4eea9d",
+    "rustfmt_version": "1.9.0-stable",
+    "clippy_version": "0.1.98"
+  },
+  "c_toolchain": {
+    "name": "llvm-mingw",
+    "version": "20260826",
+    "llvm_version": "23.1.0",
+    "target": "x86_64-w64-windows-gnu",
+    "archive_url": "https://github.com/mstorsjo/llvm-mingw/releases/download/20260826/llvm-mingw-20260826-ucrt-x86_64.zip",
+    "archive_file": "llvm-mingw-20260826-ucrt-x86_64.zip",
+    "distribution_directory": "llvm-mingw-20260826-ucrt-x86_64",
+    "archive_sha256": "ae601f4e0f72bbdf441ad2df8bb16f037e2e9251559ea6b37b4057aef39c06c3",
+    "clang_executable_sha256": "bf58cf0e544a308660645aad1fe65ae9cbc44b0871e4010278f3d9551f86a690",
+    "dlltool_executable_sha256": "e8b0919bbd53a341b07439d9ca2839197a15b9aa68c74843e6aa3de15cbfb3a7",
+    "llvm_ar_executable_sha256": "e8b0919bbd53a341b07439d9ca2839197a15b9aa68c74843e6aa3de15cbfb3a7"
+  },
+  "schema_validator": {
+    "package_lock_sha256": "cee8e2c45713e84d96def1919f1aca4b6a57191223643d92b49b056796c1c2e6",
+    "tree_sha256": "3a41db912dc6a6b24c09180bbfc692290968a80272d5e56ec3ada0569a29f63d"
+  }
+}
